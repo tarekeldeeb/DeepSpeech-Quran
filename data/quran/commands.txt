@@ -1,0 +1,26 @@
+ sed 's/[0-9a-zA-Z|#]//g' quran-uthmani.txt > quran-uthmani-vocab.txt
+>quran-alphabets.txt awk 'BEGIN{FS=""} {for(i=1;i<=NF;i++){chars[$(i)]=$(i);}} END{for(c in chars){print c;} }' quran-uthmani-vocab.txt | sort >/dev/null
+
+  
+# Build kenlm (outside of main deepspeech repo)
+git clone https://github.com/kpu/kenlm
+cd kenlm
+mkdir -p build
+cd build
+cmake ..
+make -j 4
+
+# Build language model scorer (inside main deepspeech repo)
+# parameters needs to be adjusted for better performance
+python3 data/lm/generate_lm.py --input_txt data/quran/quran-uthmani-vocab.txt --output_dir data/quran/lm \
+  --top_k 500000 --kenlm_bins ../kenlm/build/bin/ \
+  --arpa_order 4 --max_arpa_memory "85%" --arpa_prune "0|0|1" \
+  --binary_a_bits 255 --binary_q_bits 8 --binary_type trie
+
+
+python3 data/lm/generate_package.py --alphabet data/quran/quran-alphabets.txt --lm data/quran/lm/lm.binary --vocab data/quran/lm/vocab-500000.txt \
+  --package data/quran/lm/quran.scorer --default_alpha 0.931289039105002 --default_beta 1.1834137581510284
+
+
+# Inference
+deepspeech --model data/quran/output_graph.pb --scorer data/quran/lm/quran.scorer --audio data/test_recit.wav

@@ -24,3 +24,7 @@
 /doc/.build/
 /doc/xml-c/
 /doc/xml-java/
+
+data/quran/wav
+data/quran/*.csv
+data/checkpoints
