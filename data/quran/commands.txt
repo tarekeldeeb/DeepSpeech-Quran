@@ -5,6 +5,13 @@
 # Build kenlm (outside of main deepspeech repo)
 git clone https://github.com/kpu/kenlm
 cd kenlm
+
+sudo apt install liblzma-dev
+sudo apt-get install libboost-all-dev
+export EIGEN3_ROOT=$HOME/eigen-eigen-07105f7124f9
+(cd $HOME; wget -O - https://bitbucket.org/eigen/eigen/get/3.2.8.tar.bz2 |tar xj)
+rm CMakeCache.txt
+
 mkdir -p build
 cd build
 cmake ..
@@ -14,12 +21,12 @@ make -j 4
 # parameters needs to be adjusted for better performance
 python3 data/lm/generate_lm.py --input_txt data/quran/quran-uthmani-vocab.txt --output_dir data/quran/lm \
   --top_k 500000 --kenlm_bins ../kenlm/build/bin/ \
-  --arpa_order 4 --max_arpa_memory "85%" --arpa_prune "0|0|1" \
+  --arpa_order 5 --max_arpa_memory "85%" --arpa_prune "0|0|1" \
   --binary_a_bits 255 --binary_q_bits 8 --binary_type trie
 
 
 python3 data/lm/generate_package.py --alphabet data/quran/quran-alphabets.txt --lm data/quran/lm/lm.binary --vocab data/quran/lm/vocab-500000.txt \
-  --package data/quran/lm/quran.scorer --default_alpha 0.931289039105002 --default_beta 1.1834137581510284
+  --package data/quran/lm/quran.scorer --default_alpha 1.5 --default_beta 1.85
 
 
 # Inference

@@ -126,11 +126,20 @@ def _preprocess_data(location, amount):
     train_list_wavs, train_list_trans, train_list_size = [], [], []
     test_list_wavs, test_list_trans, test_list_size = [], [], []
     dev_list_wavs, dev_list_trans, dev_list_size = [], [], []
-
+    
+    arabic_move_chars = {
+        '\u064b', '\u064c', '\u064d', '\u064e',
+        '\u064f', '\u0650', '\u0651', '\u0652',
+        '\u0653', '\u0654', '\u06dc', '\u06df',
+        '\u06e0', '\u06e2', '\u06e3', '\u06e5',
+        '\u06e6', '\u06e8', '\u0670', '\u06ea',
+        '\u0671', '\u06eb', '\u06ec', '\u06ed',
+    }
     # Setting CSV Amount Threasholds
     amount_thr={
         '100p': 9999999,
         '70p':   799000,
+        '50p':   560000,
         '30p':   260000,
         '5sec':  160000
     }
@@ -140,16 +149,22 @@ def _preprocess_data(location, amount):
             if(len(tokens) == 3):
                 _su = int(tokens[0])
                 _ay = int(tokens[1])
-                if _ay==1 and _su>1 and _su!=9: #Remove extra Basmala
+                # Remove last move sound as it's not pronounced if the Imam stops by end of Aya.
+                # which is most likely.
+                if tokens[2][-1] in arabic_move_chars:
+                    tokens[2] = tokens[2][:-1]
+                if _ay==1 and _su>1 and _su!=9: # Remove extra Basmala
                     qurDict[str(_ay + _su*1000)] = tokens[2].split(' ',4)[4]
                 else:
                     qurDict[str(_ay + _su*1000)] = tokens[2]
+    total_size = 0
     for root, dirnames, filenames in os.walk(targetwav):
         for filename in fnmatch.filter(filenames, "*.wav"):
             full_wav = os.path.join(root, filename)
             wav_filesize = path.getsize(full_wav)
             if wav_filesize>amount_thr[amount]:
                 continue
+            total_size += wav_filesize
             sura_num = int(filename[:3])
             aya_num  = int(filename[3:6])
             trans = qurDict[str(aya_num + sura_num*1000)]
@@ -165,7 +180,7 @@ def _preprocess_data(location, amount):
                 test_list_wavs.append(full_wav)
                 test_list_trans.append(trans)
                 test_list_size.append(wav_filesize)
-
+    print (f"Total audio size in bytes: {total_size}")
     a = {'wav_filename': train_list_wavs,
          'wav_filesize': train_list_size,
          'transcript': train_list_trans
@@ -197,7 +212,7 @@ def _preprocess_data(location, amount):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("location", help="Directory to import to, usually 'data/'")
-    parser.add_argument('--csv_amount', choices=['100p', '70p', '30p', '5sec'], default='30p', help="The amount of verses to include in the CSV. Start with only-short datasets, then include all later. (default: %(default)s)")
+    parser.add_argument('--csv_amount', choices=['100p', '70p', '50p', '30p', '5sec'], default='70p', help="The amount of verses to include in the CSV. Start with only-short datasets, then include all later. (default: %(default)s)")
     args = parser.parse_args()
     _download_audio(args.location)
     _preprocess_data(args.location, args.csv_amount)
