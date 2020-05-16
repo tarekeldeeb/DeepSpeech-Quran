@@ -1,15 +1,33 @@
  sed 's/[0-9a-zA-Z|#]//g' quran-uthmani.txt > quran-uthmani-vocab.txt
 >quran-alphabets.txt awk 'BEGIN{FS=""} {for(i=1;i<=NF;i++){chars[$(i)]=$(i);}} END{for(c in chars){print c;} }' quran-uthmani-vocab.txt | sort >/dev/null
 
-#Build kenlm
-sudo apt-get install libboost-all-dev libeigen3-dev
-git clone https://github.com/kpu/kenlm.git ken
-mkdir -p ken/build
-cd ken/build
-BOOST_LIBRARYDIR=/usr/lib/x86_64-linux-gnu cmake ..
-make
+  
+# Build kenlm (outside of main deepspeech repo)
+git clone https://github.com/kpu/kenlm
+cd kenlm
 
-#REF:  https://discourse.mozilla.org/t/tutorial-how-i-trained-a-specific-french-model-to-control-my-robot/22830 
-../../kenlm/build/bin/lmplz --text quran-uthmani-vocab.txt --arpa  words.arpa --o 4
-../../kenlm/build/bin/build_binary trie -q 16 -b 7 -a 64 quran.arpa lm.binary
-../../nat_client.0.1.1/generate_trie quran-alphabets.txt lm.binary quran-uthmani-vocab.txt quran.trie
+sudo apt install liblzma-dev
+sudo apt-get install libboost-all-dev
+export EIGEN3_ROOT=$HOME/eigen-eigen-07105f7124f9
+(cd $HOME; wget -O - https://bitbucket.org/eigen/eigen/get/3.2.8.tar.bz2 |tar xj)
+rm CMakeCache.txt
+
+mkdir -p build
+cd build
+cmake ..
+make -j 4
+
+# Build language model scorer (inside main deepspeech repo)
+# parameters needs to be adjusted for better performance
+python3 data/lm/generate_lm.py --input_txt data/quran/quran-uthmani-vocab-noendmove.txt --output_dir data/quran/lm \
+  --top_k 500000 --kenlm_bins ../kenlm/build/bin/ \
+  --arpa_order 5 --max_arpa_memory "85%" --arpa_prune "0|0|1" \
+  --binary_a_bits 255 --binary_q_bits 8 --binary_type trie
+
+
+python3 data/lm/generate_package.py --alphabet data/quran/quran-alphabets.txt --lm data/quran/lm/lm.binary --vocab data/quran/lm/vocab-500000.txt \
+  --package data/quran/lm/quran.scorer --default_alpha 1.5 --default_beta 1.85
+
+
+# Inference
+deepspeech --model data/quran/output_graph.pb --scorer data/quran/lm/quran.scorer --audio data/test_recit.wav

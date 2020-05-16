@@ -17,33 +17,28 @@ if [ ! -f "${COMPUTE_DATA_DIR}/quran_train.csv" ]; then
          "importer script at bin/import_quran.py before running this script."
 fi;
 
-if [ -d "${COMPUTE_KEEP_DIR}" ]; then
-    checkpoint_dir=$COMPUTE_KEEP_DIR
-else
-    checkpoint_dir=$(python -c 'from xdg import BaseDirectory as xdg; print(xdg.save_data_path("deepspeech/quran"))')
-fi
-
-python -u DeepSpeech.py \
+python3 -u DeepSpeech.py \
   --train_files "$COMPUTE_DATA_DIR/quran_train.csv" \
   --dev_files "$COMPUTE_DATA_DIR/quran_dev.csv" \
   --test_files "$COMPUTE_DATA_DIR/quran_test.csv" \
   --alphabet_config_path "$COMPUTE_DATA_DIR/quran-alphabets.txt" \
-  #--scorer_path "COMPUTE_DATA_DIR/quran_lm.scorer" \
+  --scorer "$COMPUTE_DATA_DIR/lm/quran.scorer" \
   --export_dir "$COMPUTE_DATA_DIR" \
-  --lm_alpha 1.5 \
-  --lm_beta 1.85 \
-  --train_batch_size 4 \
-  --dev_batch_size 4 \
-  --test_batch_size 4 \
+  --train_batch_size 70 \
+  --dev_batch_size 70 \
+  --test_batch_size 70 \
+  --use_allow_growth "true" \
   --noearly_stop \
   --epochs 60 \
   --export_language "ar" \
   --n_hidden 1024 \
+  --n_steps 16 \
+  --dropout_rate 0.2 \
   --learning_rate 0.0001 \
   --checkpoint_dir "${COMPUTE_DATA_DIR}/../checkpoints" \
-  --max_to_keep 2 \
+  --max_to_keep 2
   --checkpoint_secs 1800 \
+  --data_aug_features_additive 0.2 \
   "$@"
 
 #  --export_tflite 'true' \
-
