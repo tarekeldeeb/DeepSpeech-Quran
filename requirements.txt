@@ -32,3 +32,4 @@ matplotlib
 wget
 #deepspeech
 #tables
+python-Levenshtein

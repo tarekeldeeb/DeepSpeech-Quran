@@ -36,7 +36,7 @@ python3 -u DeepSpeech.py \
   --dropout_rate 0.2 \
   --learning_rate 0.0001 \
   --checkpoint_dir "${COMPUTE_DATA_DIR}/../checkpoints" \
-  --max_to_keep 2
+  --max_to_keep 2 \ 
   --checkpoint_secs 1800 \
   --data_aug_features_additive 0.2 \
   "$@"
