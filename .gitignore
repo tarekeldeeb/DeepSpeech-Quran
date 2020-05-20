@@ -28,3 +28,7 @@ data/TIMIT/*
 /doc/.build/
 /doc/xml-c/
 /doc/xml-java/
+data/quran/quran_all.csv
+data/quran/quran_dev.csv
+data/quran/quran_test.csv
+data/quran/quran_train.csv

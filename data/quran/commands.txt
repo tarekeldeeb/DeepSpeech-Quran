@@ -19,7 +19,7 @@ make -j 4
 
 # Build language model scorer (inside main deepspeech repo)
 # parameters needs to be adjusted for better performance
-python3 data/lm/generate_lm.py --input_txt data/quran/quran-uthmani-vocab-noendmove.txt --output_dir data/quran/lm \
+python3 data/lm/generate_lm.py --input_txt data/quran/quran-uthmani-vocab.txt --output_dir data/quran/lm \
   --top_k 500000 --kenlm_bins ../kenlm/build/bin/ \
   --arpa_order 5 --max_arpa_memory "85%" --arpa_prune "0|0|1" \
   --binary_a_bits 255 --binary_q_bits 8 --binary_type trie
