@@ -125,14 +125,6 @@ def _preprocess_data(location, amount):
     test_list_wavs, test_list_trans, test_list_size = [], [], []
     dev_list_wavs, dev_list_trans, dev_list_size = [], [], []
     
-    arabic_move_chars = {
-        '\u064b', '\u064c', '\u064d', '\u064e',
-        '\u064f', '\u0650', '\u0651', '\u0652',
-        '\u0653', '\u0654', '\u06dc', '\u06df',
-        '\u06e0', '\u06e2', '\u06e3', '\u06e5',
-        '\u06e6', '\u06e8', '\u0670', '\u06ea',
-        '\u0671', '\u06eb', '\u06ec', '\u06ed',
-    }
     # Setting CSV Amount Threasholds
     amount_thr={
         '100p': 9999999,
@@ -147,10 +139,6 @@ def _preprocess_data(location, amount):
             if(len(tokens) == 3):
                 _su = int(tokens[0])
                 _ay = int(tokens[1])
-                # Remove last move sound as it's not pronounced if the Imam stops by end of Aya.
-                # which is most likely.
-                if tokens[2][-1] in arabic_move_chars:
-                    tokens[2] = tokens[2][:-1]
                 if _ay==1 and _su>1 and _su!=9: # Remove extra Basmala
                     qurDict[str(_ay + _su*1000)] = tokens[2].split(' ',4)[4]
                 else:
